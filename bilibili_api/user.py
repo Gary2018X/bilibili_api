@@ -100,7 +100,7 @@ def get_live_info(uid: int, verify: utils.Verify = None):
     return data
 
 
-def get_videos(uid: int, order: str = "pubdate", limit: int = 114514, callback=None, verify: utils.Verify = None):
+def get_videos(uid: int, order: str = "pubdate", tid: int = 0, limit: int = 114514, callback=None, verify: utils.Verify = None):
     """
     自动循环获取用户投稿视频信息
     :param callback: 回调函数
@@ -117,7 +117,7 @@ def get_videos(uid: int, order: str = "pubdate", limit: int = 114514, callback=N
     page = 1
     videos = []
     while count < limit:
-        data = get_videos_raw(uid=uid, order=order, pn=page, verify=verify)
+        data = get_videos_raw(uid=uid, order=order,tid=tid, pn=page, verify=verify)
         if not data["list"]["vlist"]:
             break
         count += len(data["list"]["vlist"])
