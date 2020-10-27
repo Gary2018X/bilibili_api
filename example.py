@@ -1,6 +1,4 @@
-from bilibili_api import video
-import json
+from bilibili_api.user import get_up_info
 
-v = video.get_video_info(bvid="BV1uv411q7Mv")
-
-print(json.dumps(v, indent=4, ensure_ascii=False))
+season_id = 64729846
+print(get_up_info(uid=season_id))
