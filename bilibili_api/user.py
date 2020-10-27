@@ -102,33 +102,20 @@ def get_live_info(uid: int, verify: utils.Verify = None):
     return data
 
 
-<<<<<<< HEAD
-def get_videos(uid: int, order: str = "pubdate", tid: int = 0, keyword: str = "", limit: int = 114514, callback=None,
-               verify: utils.Verify = None):
-=======
 def get_videos_g(uid: int, order: str = "pubdate", verify: utils.Verify = None):
->>>>>>> upstream/master
     """
     自动循环获取用户投稿视频信息
     :param uid:
     :param order: 排序，接受"pubdate", "view", "favorite"
     :param verify:
-    :param tid: 分区id
-    :param keyword: 关键词
     :return:
     """
     if verify is None:
         verify = utils.Verify()
 
     page = 1
-<<<<<<< HEAD
-    videos = []
-    while count < limit:
-        data = get_videos_raw(uid=uid, order=order, tid=tid, pn=page, keyword=keyword, verify=verify)
-=======
     while True:
         data = get_videos_raw(uid=uid, order=order, pn=page, verify=verify)
->>>>>>> upstream/master
         if not data["list"]["vlist"]:
             break
         for v in data["list"]["vlist"]:
