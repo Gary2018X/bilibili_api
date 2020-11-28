@@ -75,7 +75,7 @@ def get_danmaku(bvid: str = None, aid: int = None, page: int = 0,
             raise exceptions.NoPermissionException(utils.MESSAGES["no_sess"])
     api = API["video"]["info"]["danmaku"] if date is None else API["video"]["info"]["history_danmaku"]
     info = get_video_info(aid=aid, bvid=bvid, verify=verify)
-    page_id = info["pages"][page]["cid"]
+    page_id = info["pages"][page-1]["cid"]
     params = {
         "oid": page_id
     }
@@ -136,7 +136,7 @@ def get_history_danmaku_index(bvid: str = None, aid: int = None, page: int = 0,
         raise exceptions.NoPermissionException(utils.MESSAGES["no_sess"])
 
     info = get_video_info(aid=aid, bvid=bvid, verify=verify)
-    page_id = info["pages"][page]["cid"]
+    page_id = info["pages"][page-1]["cid"]
     api = API["video"]["info"]["history_danmaku_index"]
     params = {
         "oid": page_id,
@@ -250,7 +250,7 @@ def get_download_url(bvid: str = None, aid: int = None, page: int = 0,
                 raise exceptions.BilibiliException(data['code'], data['messsage'])
             playurl = data['data']
         else:
-            page_id = video_info["pages"][page]["cid"]
+            page_id = video_info["pages"][page-1]["cid"]
             url = API["video"]["info"]["playurl"]["url"]
             params = {
                 "bvid": bvid,
@@ -611,7 +611,7 @@ def send_danmaku(danmaku: utils.Danmaku, page: int = 0, bvid: str = None, aid: i
         raise exceptions.NoPermissionException(utils.MESSAGES["no_csrf"])
 
     page_info = get_pages(bvid, aid, verify)
-    oid = page_info[page]["cid"]
+    oid = page_info[page-1]["cid"]
     api = API["video"]["operate"]["send_danmaku"]
     if danmaku.is_sub:
         pool = 1
@@ -963,7 +963,7 @@ class VideoOnlineMonitor:
         pages = get_pages(self.bvid)
         if self.page >= len(pages):
             raise exceptions.BilibiliApiException("分P不存在")
-        self.cid = pages[self.page]['cid']
+        self.cid = pages[self.page-1]['cid']
 
         self.logger.debug(f'准备连接：{self.bvid}')
         self.logger.debug(f'获取服务器信息中')
