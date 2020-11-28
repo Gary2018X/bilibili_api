@@ -55,101 +55,6 @@ def get_video_info(bvid: str = None, aid: int = None, is_simple: bool = False, v
     return info
 
 
-<<<<<<< HEAD
-def get_danmaku(bvid: str = None, aid: int = None, page: int = 0,
-                verify: utils.Verify = None, date: datetime.date = None):
-    """
-    获取弹幕
-    :param aid:
-    :param bvid:
-    :param page: 分p数
-    :param verify: date不为None时需要SESSDATA验证
-    :param date: 为None时获取最新弹幕，为datetime.date时获取历史弹幕
-    """
-
-    if not (aid or bvid):
-        raise exceptions.NoIdException
-    if verify is None:
-        verify = utils.Verify()
-    if date is not None:
-        if not verify.has_sess():
-            raise exceptions.NoPermissionException(utils.MESSAGES["no_sess"])
-    api = API["video"]["info"]["danmaku"] if date is None else API["video"]["info"]["history_danmaku"]
-    info = get_video_info(aid=aid, bvid=bvid, verify=verify)
-    page_id = info["pages"][page-1]["cid"]
-    params = {
-        "oid": page_id
-    }
-    if date is not None:
-        params["date"] = date.strftime("%Y-%m-%d")
-        params["type"] = 1
-    req = requests.get(api["url"], params=params, headers=utils.DEFAULT_HEADERS, cookies=verify.get_cookies())
-    if req.ok:
-        con = req.content.decode("utf-8")
-        try:
-            xml = parseString(con)
-        except Exception:
-            j = json.loads(con)
-            raise exceptions.BilibiliException(j["code"], j["message"])
-        danmaku = xml.getElementsByTagName("d")
-        py_danmaku = []
-        for d in danmaku:
-            info = d.getAttribute("p").split(",")
-            text = d.childNodes[0].data
-            if info[5] == '0':
-                is_sub = False
-            else:
-                is_sub = True
-            dm = utils.Danmaku(
-                dm_time=float(info[0]),
-                send_time=int(info[4]),
-                crc32_id=info[6],
-                color=utils.Color(info[3]),
-                mode=info[1],
-                font_size=info[2],
-                is_sub=is_sub,
-                text=text
-            )
-            py_danmaku.append(dm)
-        return py_danmaku
-    else:
-        raise exceptions.NetworkException(req.status_code)
-
-
-def get_history_danmaku_index(bvid: str = None, aid: int = None, page: int = 0,
-                              date: datetime.date = None, verify: utils.Verify = None):
-    """
-    获取历史弹幕索引
-    :param aid:
-    :param bvid:
-    :param page:
-    :param date: 默认为这个月
-    :param verify:
-    :return:
-    """
-    if not (aid or bvid):
-        raise exceptions.NoIdException
-    if verify is None:
-        verify = utils.Verify()
-    if date is None:
-        date = datetime.date.fromtimestamp(time.time())
-    if not verify.has_sess():
-        raise exceptions.NoPermissionException(utils.MESSAGES["no_sess"])
-
-    info = get_video_info(aid=aid, bvid=bvid, verify=verify)
-    page_id = info["pages"][page-1]["cid"]
-    api = API["video"]["info"]["history_danmaku_index"]
-    params = {
-        "oid": page_id,
-        "month": date.strftime("%Y-%m"),
-        "type": 1
-    }
-    get = utils.get(url=api["url"], params=params, cookies=verify.get_cookies())
-    return get
-
-
-=======
->>>>>>> upstream/master
 def get_tags(bvid: str = None, aid: int = None, verify: utils.Verify = None):
     """
     获取视频标签
@@ -253,7 +158,7 @@ def get_download_url(bvid: str = None, aid: int = None, page: int = 0,
                 raise exceptions.BilibiliException(data['code'], data['messsage'])
             playurl = data['data']
         else:
-            page_id = video_info["pages"][page-1]["cid"]
+            page_id = video_info["pages"][page]["cid"]
             url = API["video"]["info"]["playurl"]["url"]
             params = {
                 "bvid": bvid,
@@ -319,10 +224,10 @@ def get_added_coins(bvid: str = None, aid: int = None, verify: utils.Verify = No
 def get_favorite_list(bvid: str = None, aid: int = None, verify: utils.Verify = None):
     """
     获取收藏夹列表供收藏操作用
-    :param bvid: 
-    :param aid: 
-    :param verify: 
-    :return: 
+    :param bvid:
+    :param aid:
+    :param verify:
+    :return:
     """
     if not (aid or bvid):
         raise exceptions.NoIdException
@@ -889,53 +794,6 @@ def del_comment(rpid: int, bvid: str = None, aid: int = None, verify: utils.Veri
 # 评论相关结束
 
 
-<<<<<<< HEAD
-def send_danmaku(danmaku: utils.Danmaku, page: int = 0, bvid: str = None, aid: int = None, verify: utils.Verify = None):
-    """
-    发送弹幕
-    :param danmaku: Danmaku类
-    :param page: 分p号
-    :param aid:
-    :param bvid:
-    :param verify:
-    :return:
-    """
-    if not (aid or bvid):
-        raise exceptions.NoIdException
-    if verify is None:
-        verify = utils.Verify()
-    if not verify.has_sess():
-        raise exceptions.NoPermissionException(utils.MESSAGES["no_sess"])
-    if not verify.has_csrf():
-        raise exceptions.NoPermissionException(utils.MESSAGES["no_csrf"])
-
-    page_info = get_pages(bvid, aid, verify)
-    oid = page_info[page-1]["cid"]
-    api = API["video"]["operate"]["send_danmaku"]
-    if danmaku.is_sub:
-        pool = 1
-    else:
-        pool = 0
-    data = {
-        "type": 1,
-        "oid": oid,
-        "msg": danmaku.text,
-        "aid": aid,
-        "bvid": bvid,
-        "progress": int(danmaku.dm_time.seconds * 1000),
-        "color": danmaku.color.get_dec_color(),
-        "fontsize": danmaku.font_size,
-        "pool": pool,
-        "mode": danmaku.mode,
-        "plat": 1,
-        "csrf": verify.csrf
-    }
-    resp = utils.post(url=api["url"], data=data, cookies=verify.get_cookies())
-    return resp
-
-
-=======
->>>>>>> upstream/master
 def add_tag(tag_name: str, bvid: str = None, aid: int = None, verify: utils.Verify = None):
     """
     添加标签
@@ -1289,7 +1147,7 @@ class VideoOnlineMonitor:
         pages = get_pages(self.bvid)
         if self.page >= len(pages):
             raise exceptions.BilibiliApiException("分P不存在")
-        self.cid = pages[self.page-1]['cid']
+        self.cid = pages[self.page]['cid']
 
         self.logger.debug(f'准备连接：{self.bvid}')
         self.logger.debug(f'获取服务器信息中')
@@ -1421,7 +1279,6 @@ class VideoOnlineMonitor:
 
 r"""
 哼哼哼，啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊
-
              ▃▆█▇▄▖
 　　     　▟◤▖　　　 ◥█▎
 　　　◢◤　   ▐　　　　  ▐▉
